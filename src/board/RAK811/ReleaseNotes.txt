@@ -1,6 +1,6 @@
 /********************************************************/
 features:
-1.Add version 2.x.4.2 for RAK811_tracker bpard.
+1.Add version 2.x.4.2 for RAK811_tracker board.
 2.Add some sensors driver in file "app.lib":BME680 (gas, pressure, humidity, temperature),
 											L76-L GPS,
                                             3-axis MEMS sensor LIS3DH (accelerometer).
