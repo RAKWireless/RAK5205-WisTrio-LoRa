@@ -29,7 +29,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 lora_config_t g_lora_config;
 
-static uint8_t IsTxConfirmed = LORAWAN_CONFIRMED_MSG_ON;
+extern uint8_t IsTxConfirmed ;
 extern bool at_interval_flag;
 extern void lora_cli_loop(void);
 
@@ -78,7 +78,7 @@ int main( void )
 		
 		TimerStart(&Led1Timer);
 		
-    rw_ReadUsrConfig();
+		rw_ReadUsrConfig();
 
 		e_printf("Please Configurate parameters...\r\n");
 		while(1){

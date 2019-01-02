@@ -110,7 +110,7 @@ extern uint8_t AppData[LORAWAN_APP_DATA_MAX_SIZE];
 /*!
  * Indicates if the node is sending confirmed or unconfirmed messages
  */
-static uint8_t IsTxConfirmed = LORAWAN_CONFIRMED_MSG_ON;
+uint8_t IsTxConfirmed = LORAWAN_CONFIRMED_MSG_ON;
 
 /*!
  * Defines the application data transmission duty cycle
