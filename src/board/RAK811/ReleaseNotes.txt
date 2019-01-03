@@ -1,4 +1,11 @@
-﻿/********************************************************/
+/********************************************************/
+Version 2.x.0.2:fix some bugs.
+Features
+1.fix "at+msg_confirm:x"was invalid bug. 
+2.fix "at+set_config=pwr_level:x" was invalid bug.
+
+
+/********************************************************/
 Version 2.x.0.0:Release first version.
 Features
 1.Support LoraWAN V1.0.2（ClassA/ClassC）,P2P mode. 

@@ -1,6 +1,8 @@
 # RAK5205-WisTrio-LoRa
-RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1
-
+RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
+**RAK5205-WisTrio-LoRa firmware version 2.x.0.2**<br>
+1.Fix "at+msg_confirm:x"was invalid bug. <br>
+2.Fix "at+set_config=pwr_level:x" was invalid bug.<br><br>
 **RAK5205-WisTrio-LoRa firmware version 2.x.0.0**<br>
 1.This Firmware is based on LoRaWAN 1.0.2 protocol ,support Class A and Class C mode.User could switch the mode by such as 'at+set_config=class:2' command,0:class A,1:class B(unsupported),2:class C.<br>
 >      It supports almost all frequency bands:(HF)->EU868, US915, AU915, KR920, AS923，IN865. 
