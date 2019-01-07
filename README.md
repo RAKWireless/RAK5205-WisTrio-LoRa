@@ -33,3 +33,7 @@ GPS low power mode. <br>
  Supports global license-free ISM band (EU433, CN470, EU868, US915, AS923,
 AU915, KR920 and IN865). <br>
  Supports I2C, GPIOs, UART and ADC interfaces
+
+
+BTW, there is a very interesting tutorial for RAK5205 Wistrio made by Manivannan Sadhasivam:
+https://github.com/Mani-Sadhasivam/zephyr/blob/96b_wistrio/boards/arm/96b_wistrio/doc/96b_wistrio.rst 
