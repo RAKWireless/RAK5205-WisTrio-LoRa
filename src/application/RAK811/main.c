@@ -114,7 +114,7 @@ int main( void )
 	
 	GPIOIRQ_Enable();	
 	
-	BoardHiwdogInit();	
+//	BoardHiwdogInit();	
 //	TimerStart(&HIWDG_Timer);
 	
 	e_printf("Board Initialization OK!\r\n\r\n");
@@ -123,7 +123,7 @@ int main( void )
 	{
 
 		lora_cli_loop();				
-		BoardHIWDGRefresh();
+//		BoardHIWDGRefresh();
 #ifdef TRACKERBOARD
 		LoRaWAN_loop();	
 #endif			

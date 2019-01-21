@@ -1,4 +1,10 @@
 /********************************************************/
+Version 2.x.0.3:fix some bugs.
+Features
+1.fix the "LIS3DH no ack" problem.
+2.fix a bug :when set the parameter "app_interval" too big,MCU will restart.
+
+/********************************************************/
 Version 2.x.0.2:fix some bugs.
 Features
 1.fix "at+msg_confirm:x"was invalid bug. 

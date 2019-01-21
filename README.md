@@ -1,5 +1,9 @@
 # RAK5205-WisTrio-LoRa
 RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
+
+**RAK5205-WisTrio-LoRa firmware version 2.x.0.3**<br>
+1.fix the "LIS3DH no ack" problem.. <br>
+2.fix a bug :when set the parameter "app_interval" too big,MCU will restart.<br><br>
 **RAK5205-WisTrio-LoRa firmware version 2.x.0.2**<br>
 1.Fix "at+msg_confirm:x"was invalid bug. <br>
 2.Fix "at+set_config=pwr_level:x" was invalid bug.<br><br>
