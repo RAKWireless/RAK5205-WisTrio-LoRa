@@ -25,13 +25,13 @@ Maintainer: Andreas Pella (IMST GmbH), Miguel Luis and Gregory Cristian
 void AdcMcuInit( Adc_t *obj, PinNames adcInput )
 {
     obj->Adc.Instance = ( ADC_TypeDef *)ADC1_BASE;
-#ifdef LORA_HF_BOARD
+//#ifdef LORA_HF_BOARD
     GpioInit( &obj->AdcInput, adcInput, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-#else 
-		if (HAL_ADC_DeInit(&obj->Adc) != HAL_OK)
-		{
-		}	 
-#endif
+//#else 
+//		if (HAL_ADC_DeInit(&obj->Adc) != HAL_OK)
+//		{
+//		}	 
+//#endif
 }
 
 void AdcMcuFormat( Adc_t *obj, AdcResolution AdcRes, AdcNumConversion AdcNumConv, AdcTriggerConv AdcTrig, AdcDataAlignement AdcDataAlig )
