@@ -81,7 +81,7 @@ void GpsStart( void )
 {
     GpsMcuStart( );
 	
-	if(g_power_source == USB_POWER)
+	if(g_power_source == BATTERY_POWER)
 	{
 		DelayMs(10);
 		  // Disable Temp
