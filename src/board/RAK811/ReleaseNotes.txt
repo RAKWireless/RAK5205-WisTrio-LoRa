@@ -1,4 +1,11 @@
 /********************************************************/
+Version 2.x.0.4:fix some bugs.
+Features
+1.fix a Sending data fault.
+2.For a better user experience, The default dutyCycle modify to 100%.
+3.Add watchdog.
+
+/********************************************************/
 Version 2.x.0.3:fix some bugs.
 Features
 1.fix the "LIS3DH no ack" problem.

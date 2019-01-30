@@ -1,8 +1,11 @@
 # RAK5205-WisTrio-LoRa
 RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
-
+**RAK5205-WisTrio-LoRa firmware version 2.x.0.4**<br>
+1.fix a Sending data fault. <br>
+2.For a better user experience, The default dutyCycle modify to 100%. <br>
+3.Add watchdog. <br> <br>
 **RAK5205-WisTrio-LoRa firmware version 2.x.0.3**<br>
-1.fix the "LIS3DH no ack" problem.. <br>
+1.fix the "LIS3DH no ack" problem. <br>
 2.fix a bug :when set the parameter "app_interval" too big,MCU will restart.<br><br>
 **RAK5205-WisTrio-LoRa firmware version 2.x.0.2**<br>
 1.Fix "at+msg_confirm:x"was invalid bug. <br>

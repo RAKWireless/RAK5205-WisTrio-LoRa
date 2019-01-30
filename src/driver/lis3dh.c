@@ -28,7 +28,6 @@ http://www.apache.org/licenses/LICENSE-2.0
 #include "board.h"
 
 #define FIFO_STREAM_MODE
-#define LIS3DH_ODR_FREQ     LIS3DH_ODR_10Hz
 
 #define ASSERT(_cond_)
 

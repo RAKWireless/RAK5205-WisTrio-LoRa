@@ -30,9 +30,9 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 
 
 
-#define BACKOFF_DC_1_HOUR       100
-#define BACKOFF_DC_10_HOURS     1000
-#define BACKOFF_DC_24_HOURS     10000
+#define BACKOFF_DC_1_HOUR       10
+#define BACKOFF_DC_10_HOURS     100
+#define BACKOFF_DC_24_HOURS     1000
 
 
 
@@ -332,7 +332,7 @@ void RegionCommonCalcBackOff( RegionCommonCalcBackOffParams_t* calcBackOffParams
         // Get the join duty cycle
         joinDutyCycle = RegionCommonGetJoinDc( calcBackOffParams->ElapsedTime );
         // Apply the most restricting duty cycle
-        dutyCycle = MAX( dutyCycle, joinDutyCycle );
+        dutyCycle = joinDutyCycle;//MAX( dutyCycle, joinDutyCycle );
         // Reset the timeoff if the last frame was not a join request and when the duty cycle is not enabled
         if( ( calcBackOffParams->DutyCycleEnabled == false ) && ( calcBackOffParams->LastTxIsJoinRequest == false ) )
         {
@@ -350,6 +350,7 @@ void RegionCommonCalcBackOff( RegionCommonCalcBackOffParams_t* calcBackOffParams
     }
     else
     {
+		dutyCycle = RegionCommonGetJoinDc( calcBackOffParams->ElapsedTime );
         if( calcBackOffParams->DutyCycleEnabled == true )
         {
             calcBackOffParams->Bands[bandIdx].TimeOff = calcBackOffParams->TxTimeOnAir * dutyCycle - calcBackOffParams->TxTimeOnAir;

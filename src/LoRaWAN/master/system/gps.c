@@ -81,35 +81,38 @@ void GpsStart( void )
 {
     GpsMcuStart( );
 	
-	DelayMs(10);
-	  // Disable Temp
-	LIS3DH_SetTemperature(MEMS_DISABLE);
-	// ODR = 100 Hz and enable X, Y, and Z
-	LIS3DH_SetODR(LIS3DH_ODR_FREQ);
-	LIS3DH_SetAxis(LIS3DH_X_ENABLE | LIS3DH_Y_ENABLE | LIS3DH_Z_ENABLE);
-	// Normal mode
-	LIS3DH_SetMode(LIS3DH_LOW_POWER);
-	// High-pass filter enabled on interrupt activity 1
-	LIS3DH_SetFilterDataSel(MEMS_ENABLE);
-	LIS3DH_HPFAOI1Enable(MEMS_ENABLE);
-	// Interrupt activity 1 driven to INT1 pad
-	LIS3DH_SetInt1Pin(LIS3DH_I1_INT1_ON_PIN_INT1_ENABLE);
-	// BDU set for temp, FS = 2g  
-	LIS3DH_SetBDU(MEMS_ENABLE);
-	LIS3DH_SetFullScale(LIS3DH_FULLSCALE_2);
-	// Interrupt 1 pin latched
-	LIS3DH_Int1LatchEnable(MEMS_ENABLE);
-	// active-low
-	LIS3DH_SetInt2Pin(LIS3DH_INT_ACTIVE_LOW);
-	// Threshold = 125 mg
-	LIS3DH_SetInt1Threshold(0x08);
-	LIS3DH_SetInt1Duration(0x00);
-	// Enable XH and YH interrupt generation
-	LIS3DH_SetIntMode(LIS3DH_INT_MODE_6D_MOVEMENT);
-	LIS3DH_SetInt6D4DConfiguration(LIS3DH_INT1_6D_ENABLE);
-	LIS3DH_SetIntConfiguration(LIS3DH_INT1_ZHIE_ENABLE | LIS3DH_INT1_ZLIE_ENABLE |
-							 LIS3DH_INT1_YHIE_ENABLE | LIS3DH_INT1_YLIE_ENABLE | 
-							 LIS3DH_INT1_XHIE_ENABLE | LIS3DH_INT1_XLIE_ENABLE);
+	if(g_power_source == USB_POWER)
+	{
+		DelayMs(10);
+		  // Disable Temp
+		LIS3DH_SetTemperature(MEMS_DISABLE);
+		// ODR = 100 Hz and enable X, Y, and Z
+		LIS3DH_SetODR(LIS3DH_ODR_FREQ);
+		LIS3DH_SetAxis(LIS3DH_X_ENABLE | LIS3DH_Y_ENABLE | LIS3DH_Z_ENABLE);
+		// Normal mode
+		LIS3DH_SetMode(LIS3DH_LOW_POWER);
+		// High-pass filter enabled on interrupt activity 1
+		LIS3DH_SetFilterDataSel(MEMS_ENABLE);
+		LIS3DH_HPFAOI1Enable(MEMS_ENABLE);
+		// Interrupt activity 1 driven to INT1 pad
+		LIS3DH_SetInt1Pin(LIS3DH_I1_INT1_ON_PIN_INT1_ENABLE);
+		// BDU set for temp, FS = 2g  
+		LIS3DH_SetBDU(MEMS_ENABLE);
+		LIS3DH_SetFullScale(LIS3DH_FULLSCALE_2);
+		// Interrupt 1 pin latched
+		LIS3DH_Int1LatchEnable(MEMS_ENABLE);
+		// active-low
+		LIS3DH_SetInt2Pin(LIS3DH_INT_ACTIVE_LOW);
+		// Threshold = 125 mg
+		LIS3DH_SetInt1Threshold(0x08);
+		LIS3DH_SetInt1Duration(0x00);
+		// Enable XH and YH interrupt generation
+		LIS3DH_SetIntMode(LIS3DH_INT_MODE_6D_MOVEMENT);
+		LIS3DH_SetInt6D4DConfiguration(LIS3DH_INT1_6D_ENABLE);
+		LIS3DH_SetIntConfiguration(LIS3DH_INT1_ZHIE_ENABLE | LIS3DH_INT1_ZLIE_ENABLE |
+								 LIS3DH_INT1_YHIE_ENABLE | LIS3DH_INT1_YLIE_ENABLE | 
+								 LIS3DH_INT1_XHIE_ENABLE | LIS3DH_INT1_XLIE_ENABLE);
+	 }
     
 }
 

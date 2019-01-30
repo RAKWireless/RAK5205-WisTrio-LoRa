@@ -48,7 +48,6 @@ typedef u8_t LIS3DH_IntPinConf_t;
 typedef u8_t LIS3DH_Axis_t;
 typedef u8_t LIS3DH_Int1Conf_t;
 #define LIS3DH_FULLSCALE LIS3DH_FULLSCALE_4
-#define LIS3DH_ODR_FREQ     LIS3DH_ODR_10Hz
 
 #define LIS3DH_READBIT                (0x80)
 #define LIS3DH_MSBIT                (0x40)

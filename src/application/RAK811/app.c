@@ -151,7 +151,7 @@ static TimerEvent_t TxNextPacketTimer;
 
  void HIWDG_Timer_Event(void){
 	TimerStop(&HIWDG_Timer);
-	BoardHIWDGRefresh();
+
 #ifdef TRACKERBOARD
 	GpioWrite(&Led1, 0);
 	TimerStart(&Led1Timer);
@@ -240,7 +240,7 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
   		app_data[2] = ((bat / 10) >> 8) & 0xFF;
   		app_data[3] = (bat / 10) & 0xFF;
   		*size = 4;
-  		e_printf("Bat: %dmv\r\n", bat);
+  		e_printf("Tx_Bat: %dmv\r\n", bat);
   		f_ret = SUCCESS;
   		break;
   	}
@@ -255,7 +255,7 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
   		app_data[6] = ( acc_data.acc_z >> 8 ) && 0xFF;
   		app_data[7] = ( acc_data.acc_z ) && 0xFF;
   		*size = 8;
-  		e_printf("ACC X:%dmg Y:%dmg Z:%dmg\r\n",
+  		e_printf("Tx_ACC X:%dmg Y:%dmg Z:%dmg\r\n",
   			acc_data.acc_x, acc_data.acc_y,acc_data.acc_z);
   		f_ret = SUCCESS;
   		break;
@@ -367,7 +367,8 @@ static bool SendFrame(uint8_t app_port) {
 /*!
  * \brief Function executed on TxNextPacket Timeout event
  */
-static void OnTxNextPacketTimerEvent(void) {
+static void OnTxNextPacketTimerEvent(void) 
+{
 	MibRequestConfirm_t mibReq;
 	LoRaMacStatus_t status;
 
@@ -376,17 +377,25 @@ static void OnTxNextPacketTimerEvent(void) {
 	mibReq.Type = MIB_NETWORK_JOINED;
 	status = LoRaMacMibGetRequestConfirm(&mibReq);
 
-	if (status == LORAMAC_STATUS_OK) {
-		if (mibReq.Param.IsNetworkJoined == true) {
-			DeviceState = DEVICE_STATE_SEND;
-			if( APP_PORT_FLAG == 0 ){
+	if (status == LORAMAC_STATUS_OK) 
+	{
+		if (mibReq.Param.IsNetworkJoined == true)
+		{
+			if( APP_PORT_FLAG == 0 )
+			{
 				APP_PORT_FLAG |= APP_PORT_GPS_FLAG;
 				APP_PORT_FLAG |= APP_PORT_ACC_FLAG;			
 				APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;		
 				APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
+				DeviceState = DEVICE_STATE_SEND;
 			}
+			else if((APP_PORT_FLAG & APP_PORT_GPS_FLAG))DeviceState = DEVICE_STATE_SEND;
+			else DeviceState = DEVICE_STATE_CYCLE;
+			
 			NextTx = true;
-		} else {
+		} 
+		else 
+		{
 			DeviceState = DEVICE_STATE_JOIN;
 		}
 	}
@@ -418,29 +427,50 @@ void OnLed2TimerEvent(void) {
  * \param   [IN] mcpsConfirm - Pointer to the confirm structure,
  *               containing confirm attributes.
  */
-static void McpsConfirm_callback(McpsConfirm_t *mcpsConfirm) {
-	if (mcpsConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK) {
-		switch (mcpsConfirm->McpsRequest) {
-		case MCPS_UNCONFIRMED: {
-			// Check Datarate
-			// Check TxPower
-			break;
+static void McpsConfirm_callback(McpsConfirm_t *mcpsConfirm) 
+{
+	if (mcpsConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK) 
+	{
+		switch (mcpsConfirm->McpsRequest) 
+		{
+			case MCPS_UNCONFIRMED: 
+			{
+				// Check Datarate
+				// Check TxPower			
+				break;
+			}
+			case MCPS_CONFIRMED: 
+			{
+				// Check Datarate
+				// Check TxPower
+				// Check AckReceived
+				// Check NbTrials
+				break;
+			}
+			case MCPS_PROPRIETARY: 
+			{
+				break;
+			}
+			default:
+				break;
 		}
-		case MCPS_CONFIRMED: {
-			// Check Datarate
-			// Check TxPower
-			// Check AckReceived
-			// Check NbTrials
-			break;
-		}
-		case MCPS_PROPRIETARY: {
-			break;
-		}
-		default:
-			break;
-		}
-
 	}
+
+	if( APP_PORT_FLAG & APP_PORT_GPS_FLAG )APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
+	else if( APP_PORT_FLAG & APP_PORT_TEMP_FLAG )APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
+	else if( APP_PORT_FLAG & APP_PORT_ACC_FLAG )APP_PORT_FLAG &= ~APP_PORT_ACC_FLAG;
+	else if( APP_PORT_FLAG & APP_PORT_GAS_FLAG )APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;		
+
+	if( APP_PORT_FLAG != 0 )DeviceState = DEVICE_STATE_SEND;
+	else 
+	{
+		if( APP_PORT_FLAG == 0 )
+		{
+			TxDutyCycleTime = g_lora_config.app_interval * 1000;
+		}		
+		DeviceState = DEVICE_STATE_CYCLE;	
+	}
+
 	NextTx = true;
 }
 
@@ -681,7 +711,7 @@ static uint8_t RetryCnt=0;
 	case MLME_JOIN: {
 		if (mlmeConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK) {
 			// Status is OK, node has joined the network
-			DeviceState = DEVICE_STATE_CYCLE;
+			DeviceState = DEVICE_STATE_SEND;
 			e_printf("OTAA Join Success! \r\n");
 			RetryCnt=0;
 			/* Switch LED 1 ON*/
@@ -901,9 +931,9 @@ int LoRaWAN_loop(void) {
 				TimerStart( &Led2Timer );
 				
 				APP_PORT_FLAG |= APP_PORT_GPS_FLAG;
-    		APP_PORT_FLAG |= APP_PORT_ACC_FLAG;	
-    		APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;
-    		APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
+				APP_PORT_FLAG |= APP_PORT_ACC_FLAG;	
+				APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;
+				APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
       		
 				DeviceState = DEVICE_STATE_SEND;
 			}
@@ -926,7 +956,7 @@ int LoRaWAN_loop(void) {
             ret = PrepareTxFrame(APP_PORT_GPS, AppData, &AppDataSize);
             app_port = APP_PORT_GPS;
             if( ret == SUCCESS ){
-              APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
+//              APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
               if( GetBoardPowerSource( ) == BATTERY_POWER){
                 GpsStop();
               }
@@ -942,7 +972,11 @@ int LoRaWAN_loop(void) {
                 if( GetBoardPowerSource( ) == BATTERY_POWER){
                   GpsStop();
                 }
+				e_printf("FAIL.The Satellite signal not found!\r\n");				
                 next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+				DelayMs(next_time);
+				DeviceState = DEVICE_STATE_SEND;
+				break;				
               }
               else{
                 next_time = 1000;
@@ -953,7 +987,7 @@ int LoRaWAN_loop(void) {
   					ret = PrepareTxFrame(APP_PORT_TEMP, AppData, &AppDataSize);
   					if( ret == SUCCESS ){
   						app_port = APP_PORT_TEMP;
-  						APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
+//  						APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
   					}
   					next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
   				}
@@ -961,7 +995,7 @@ int LoRaWAN_loop(void) {
   					ret = PrepareTxFrame(APP_PORT_ACC, AppData, &AppDataSize);
   					if( ret == SUCCESS ){
   						app_port = APP_PORT_ACC;
-  						APP_PORT_FLAG &= ~APP_PORT_ACC_FLAG;
+//  						APP_PORT_FLAG &= ~APP_PORT_ACC_FLAG;
   					}
   					next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
   				}
@@ -970,7 +1004,7 @@ int LoRaWAN_loop(void) {
   				    ret = PrepareTxFrame( APP_PORT_GAS, AppData, &AppDataSize);
   				    if( ret == SUCCESS ){
   				        app_port = APP_PORT_GAS;
-  				        APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;
+//  				        APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;
   				    }
               next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
   				}    				
@@ -980,13 +1014,8 @@ int LoRaWAN_loop(void) {
 					ret = SendFrame(app_port);
 					NextTx = ret;
 				}
-
-				if( APP_PORT_FLAG == 0 ){
-					next_time = g_lora_config.app_interval * 1000;
-				}
 				
-			}
-			
+			}			
 			if (ComplianceTest.Running == true) {
 				// Schedule next packet transmission
 				TxDutyCycleTime = 5000; // 5000 ms
@@ -997,12 +1026,13 @@ int LoRaWAN_loop(void) {
 			DeviceState = DEVICE_STATE_CYCLE;
 			break;
 		}
-		case DEVICE_STATE_CYCLE: {
-			DeviceState = DEVICE_STATE_SLEEP;
+		case DEVICE_STATE_CYCLE: {	
 
 			// Schedule next packet transmission
 			TimerSetValue(&TxNextPacketTimer, TxDutyCycleTime);
-			TimerStart(&TxNextPacketTimer);
+			TimerStart(&TxNextPacketTimer);	
+			DeviceState = DEVICE_STATE_SLEEP;				
+
 			break;
 		}
 		case DEVICE_STATE_SLEEP: {
