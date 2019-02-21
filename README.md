@@ -1,5 +1,8 @@
 # RAK5205-WisTrio-LoRa
 RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
+**RAK5205-WisTrio-LoRa firmware version 2.x.0.5**<br>
+For compatible with older instructions,modify some AT commands to old commands during the configuration.
+details of the AT commands refer to "5205-WisTrio-LoRa node V1.1".<br><br>
 **RAK5205-WisTrio-LoRa firmware version 2.x.0.4**<br>
 1.fix a Sending data fault. <br>
 2.For a better user experience, The default dutyCycle modify to 100%. <br>

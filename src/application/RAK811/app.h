@@ -24,7 +24,7 @@
 //#else
 //	#define FUN_VER            3           //3:LoRaNode 4:TrackerBoard
 #endif
-#define BUG_VER            4         //odd:DEBUG   even:RELEASE
+#define BUG_VER            5         //odd:DEBUG   even:RELEASE
 #define TEST_VER           1  // 1 test uplink downlink
                               // 2 actility cert test
                               // 3 HSI cabrit

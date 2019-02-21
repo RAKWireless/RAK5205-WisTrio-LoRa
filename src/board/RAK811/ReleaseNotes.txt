@@ -1,4 +1,11 @@
 /********************************************************/
+Version 2.x.0.5:fix some bugs.
+Features
+For compatible with older instructions,modify some AT commands to old commands during the configuration.
+details of the AT commands refer to "5205-WisTrio-LoRa node V1.1 ".
+
+
+/********************************************************/
 Version 2.x.0.4:fix some bugs.
 Features
 1.fix a Sending data fault.

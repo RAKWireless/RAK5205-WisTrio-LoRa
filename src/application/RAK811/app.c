@@ -22,7 +22,6 @@
 #include "app.h"
 #include "LoRaMac.h"
 #include "Region.h"
-#include "Commissioning.h"
 #include "rw_sys.h"
 
 /*!
@@ -151,7 +150,6 @@ static TimerEvent_t TxNextPacketTimer;
 
  void HIWDG_Timer_Event(void){
 	TimerStop(&HIWDG_Timer);
-
 #ifdef TRACKERBOARD
 	GpioWrite(&Led1, 0);
 	TimerStart(&Led1Timer);
@@ -192,128 +190,150 @@ static uint32_t APP_PORT_FLAG = 0;
 static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size ) {
 	double latitude, longitude = 0;
 	int16_t altitudeGps = 0xFFFF;
-//	int8_t tempr = 25;
+	//	int8_t tempr = 25;
 	uint8_t ret;
 	uint16_t bat;
 	uint8_t f_ret;
 	int16_t temp = 0;
-  uint32_t press = 0;
-  uint32_t humi = 0;
-  uint32_t resis = 0;
-  int index;
-  
-	switch (port) {
+	uint32_t press = 0;
+	uint32_t humi = 0;
+	uint32_t resis = 0;
+	int index;
+	  
+	
+	switch (port) 
+	{
   	//https://mydevices.com/cayenne/docs/lora/#lora-cayenne-low-power-payload
-  	//cayenne LPP GPS
-  	case APP_PORT_GPS: {
-  		ret = GpsGetLatestGpsPositionDouble(&latitude, &longitude);
+//cayenne LPP GPS
+		case APP_PORT_GPS: 
+		{
+			ret = GpsGetLatestGpsPositionDouble(&latitude, &longitude);
+			
+			altitudeGps = GpsGetLatestGpsAltitude(); // in m
+				
+			gps84_To_Gcj02(latitude, longitude, &latitude, &longitude);
+			if( ret == SUCCESS )
+			{
+				app_data[0] = 0x01;
+				app_data[1] = 0x88;
+				app_data[2] = ((int32_t) (latitude * 10000) >> 16) & 0xFF;
+				app_data[3] = ((int32_t) (latitude * 10000) >> 8) & 0xFF;
+				app_data[4] = ((int32_t) (latitude * 10000)) & 0xFF;
+				app_data[5] = ((int32_t) (longitude * 10000) >> 16) & 0xFF;
+				app_data[6] = ((int32_t) (longitude * 10000) >> 8) & 0xFF;
+				app_data[7] = ((int32_t) (longitude * 10000)) & 0xFF;
+				app_data[8] = ((altitudeGps * 100) >> 16) & 0xFF;
+				app_data[9] = ((altitudeGps * 100) >> 8) & 0xFF;
+				app_data[10] = (altitudeGps * 100) & 0xFF;
+				
+				float speed;
+				sscanf(NmeaGpsData.NmeaSpeed,"%f", &speed );
+				speed*=1.852;  //unit:km/h
+				app_data[11] = ((uint16_t)(speed*100)>>8)& 0xFF;; //high byte speed   
+				app_data[12] = ((uint16_t)(speed*100))& 0xFF;; //low byte speed    
+				*size = 13;	
+				e_printf("latitude: %f, longitude: %f , altitudeGps: %d, speed: %f\r\n", latitude, longitude, altitudeGps,speed);
+				f_ret = SUCCESS;
+			}
+			else 
+			{
+				*size = 0;
+				f_ret = FAIL;
+			}
+			break;
+		}
+//cayenne LPP Temp
+		case APP_PORT_TEMP: 
+		{
+			app_data[0] = 0x07;
+			app_data[1] = 0x02; //Analog Output
+			bat = BoardBatteryMeasureVolage();
+			app_data[2] = ((bat / 10) >> 8) & 0xFF;
+			app_data[3] = (bat / 10) & 0xFF;
+			*size = 4;
+			e_printf("Tx_Bat: %dmv\r\n",bat);
+			f_ret = SUCCESS;
+			break;
+		}
+//cayenne LPP Acceleration
+		case APP_PORT_ACC: 
+		{
+			app_data[0] = 0x03;
+			app_data[1] = 0x71;
+			app_data[2] = ( acc_data.acc_x >> 8 ) && 0xFF;
+			app_data[3] = ( acc_data.acc_x ) && 0xFF;
+			app_data[4] = ( acc_data.acc_y >> 8 ) && 0xFF;
+			app_data[5] = ( acc_data.acc_y ) && 0xFF;
+			app_data[6] = ( acc_data.acc_z >> 8 ) && 0xFF;
+			app_data[7] = ( acc_data.acc_z ) && 0xFF;
+			*size = 8;
+			e_printf("Tx_ACC X:%dmg Y:%dmg Z:%dmg\r\n",
+				acc_data.acc_x, acc_data.acc_y,acc_data.acc_z);
+			f_ret = SUCCESS;
+			break;
+		}
   		
-  		altitudeGps = GpsGetLatestGpsAltitude(); // in m
-  		
-  		gps84_To_Gcj02(latitude, longitude, &latitude, &longitude);
-  		if( ret == SUCCESS ){
-  		  app_data[0] = 0x01;
-  			app_data[1] = 0x88;
-  			app_data[2] = ((int32_t) (latitude * 10000) >> 16) & 0xFF;
-  			app_data[3] = ((int32_t) (latitude * 10000) >> 8) & 0xFF;
-  			app_data[4] = ((int32_t) (latitude * 10000)) & 0xFF;
-  			app_data[5] = ((int32_t) (longitude * 10000) >> 16) & 0xFF;
-  			app_data[6] = ((int32_t) (longitude * 10000) >> 8) & 0xFF;
-  			app_data[7] = ((int32_t) (longitude * 10000)) & 0xFF;
-  			app_data[8] = ((altitudeGps * 100) >> 16) & 0xFF;
-  			app_data[9] = ((altitudeGps * 100) >> 8) & 0xFF;
-  			app_data[10] = (altitudeGps * 100) & 0xFF;
-  			*size = 11;
-  			e_printf("latitude: %f, longitude: %f , altitudeGps: %d\r\n", latitude, longitude, altitudeGps);
-  			f_ret = SUCCESS;
-  		} else {
-  			*size = 0;
-  			f_ret = FAIL;
-  		}
-  		break;
-	  }
-		//cayenne LPP Temp
-  	case APP_PORT_TEMP: {
-  		app_data[0] = 0x07;
-  		app_data[1] = 0x02; //Analog Output
-  		bat = BoardBatteryMeasureVolage();
-  		app_data[2] = ((bat / 10) >> 8) & 0xFF;
-  		app_data[3] = (bat / 10) & 0xFF;
-  		*size = 4;
-  		e_printf("Tx_Bat: %dmv\r\n", bat);
-  		f_ret = SUCCESS;
-  		break;
-  	}
-  	//cayenne LPP Acceleration
-  	case APP_PORT_ACC: {
-  		app_data[0] = 0x03;
-  		app_data[1] = 0x71;
-  		app_data[2] = ( acc_data.acc_x >> 8 ) && 0xFF;
-  		app_data[3] = ( acc_data.acc_x ) && 0xFF;
-  		app_data[4] = ( acc_data.acc_y >> 8 ) && 0xFF;
-  		app_data[5] = ( acc_data.acc_y ) && 0xFF;
-  		app_data[6] = ( acc_data.acc_z >> 8 ) && 0xFF;
-  		app_data[7] = ( acc_data.acc_z ) && 0xFF;
-  		*size = 8;
-  		e_printf("Tx_ACC X:%dmg Y:%dmg Z:%dmg\r\n",
-  			acc_data.acc_x, acc_data.acc_y,acc_data.acc_z);
-  		f_ret = SUCCESS;
-  		break;
-  	}
-  		
-  	case APP_PORT_GAS : {
-      if(SUCCESS == BME680_read(&temp, &press, &humi, &resis)){
-          app_data[0] = 0x02;
-          app_data[1] = 0x67;
-          app_data[2] = (( temp / 10 ) >> 8 ) & 0xFF;
-          app_data[3] = (temp / 10 ) & 0xFF;
+		case APP_PORT_GAS : 
+		{
+			if(SUCCESS == BME680_read(&temp, &press, &humi, &resis))
+			{
+				app_data[0] = 0x02;
+				app_data[1] = 0x67;
+				app_data[2] = (( temp / 10 ) >> 8 ) & 0xFF;
+				app_data[3] = (temp / 10 ) & 0xFF;
 
-          app_data[4] = 0x05;
-          app_data[5] = 0x68;
-          app_data[6] = ( humi / 500 ) & 0xFF;
+				app_data[4] = 0x05;
+				app_data[5] = 0x68;
+				app_data[6] = ( humi / 500 ) & 0xFF;
 
-          app_data[7] = 0x06;
-          app_data[8] = 0x73;
-          app_data[9] = (((int32_t)( press / 10)) >> 8) & 0xFF;
-          app_data[10] = ((int32_t)(press / 10 )) & 0xFF;
-          
-          *size = 11;
-          f_ret = SUCCESS;
-      }
-      else{
-        f_ret = FAIL;
-      }
-      break;
-  	}
-  	case 224:{
-  		if (ComplianceTest.LinkCheck == true) {
-  			ComplianceTest.LinkCheck = false;
-  			*size = 3;
-  			app_data[0] = 5;
-  			app_data[1] = ComplianceTest.DemodMargin;
-  			app_data[2] = ComplianceTest.NbGateways;
-  			ComplianceTest.State = 1;
-  		} else {
-  			switch (ComplianceTest.State) {
-    			case 4:
-    				ComplianceTest.State = 1;
-    				break;
-    			case 1:
-    				*size = 2;
-    				app_data[0] = ComplianceTest.DownLinkCounter >> 8;
-    				app_data[1] = ComplianceTest.DownLinkCounter;
-    				break;
-  			}
-  		}
-  		f_ret = SUCCESS;
-  		break;
-  	}
-  	default:
-  		f_ret = FAIL;
-  		break;
+				app_data[7] = 0x06;
+				app_data[8] = 0x73;
+				app_data[9] = (((int32_t)( press / 10)) >> 8) & 0xFF;
+				app_data[10] = ((int32_t)(press / 10 )) & 0xFF;
+
+				*size = 11;
+				f_ret = SUCCESS;
+			}
+			else
+			{
+				f_ret = FAIL;
+			}
+			break;
+		}
+		case 224:
+		{
+			if (ComplianceTest.LinkCheck == true) 
+			{
+				ComplianceTest.LinkCheck = false;
+				*size = 3;
+				app_data[0] = 5;
+				app_data[1] = ComplianceTest.DemodMargin;
+				app_data[2] = ComplianceTest.NbGateways;
+				ComplianceTest.State = 1;
+				} 
+			else 
+			{
+				switch (ComplianceTest.State) 
+				{
+					case 4:
+						ComplianceTest.State = 1;
+						break;
+					case 1:
+						*size = 2;
+						app_data[0] = ComplianceTest.DownLinkCounter >> 8;
+						app_data[1] = ComplianceTest.DownLinkCounter;
+						break;
+				}
+			}
+			f_ret = SUCCESS;
+			break;
+		}
+		default:
+			f_ret = FAIL;
+			break;
   	}
   	
-	  return f_ret;
+	return f_ret;
 }
 
 /*!
@@ -329,7 +349,7 @@ static bool SendFrame(uint8_t app_port) {
 	
 	if (LoRaMacQueryTxPossible(AppDataSize, &txInfo) != LORAMAC_STATUS_OK) {
 		// Send empty frame in order to flush MAC commands
-		    e_printf("Tx impossible!!\r\n");
+		e_printf("Tx impossible!!\r\n");
         mcpsReq.Type = MCPS_UNCONFIRMED;
         mcpsReq.Req.Unconfirmed.fBuffer = NULL;
         mcpsReq.Req.Unconfirmed.fBufferSize = 0;
@@ -427,7 +447,7 @@ void OnLed2TimerEvent(void) {
  * \param   [IN] mcpsConfirm - Pointer to the confirm structure,
  *               containing confirm attributes.
  */
-static void McpsConfirm_callback(McpsConfirm_t *mcpsConfirm) 
+static void McpsConfirm_callback(McpsConfirm_t *mcpsConfirm)
 {
 	if (mcpsConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK) 
 	{
@@ -470,7 +490,6 @@ static void McpsConfirm_callback(McpsConfirm_t *mcpsConfirm)
 		}		
 		DeviceState = DEVICE_STATE_CYCLE;	
 	}
-
 	NextTx = true;
 }
 
@@ -771,101 +790,33 @@ int LoRaWAN_loop(void) {
 	
 	uint8_t ret;
 	uint32_t next_time;
-  uint8_t app_port;
+	uint8_t app_port;
 //e_printf("DeviceState=%d \r\n",DeviceState);    
-	switch (DeviceState) {
-		case DEVICE_STATE_INIT: {
+	switch (DeviceState) 
+	{
+		case DEVICE_STATE_INIT: 
+		{
 			LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm_callback;
 			LoRaMacPrimitives.MacMcpsIndication = McpsIndication_callback;
 			LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm_callback;
 			LoRaMacCallbacks.GetBatteryLevel = BoardGetBatteryLevel;
-			
+
 			region=rw_Str2Region(g_lora_config.region);
-			
+
 			LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, region );			
-			
-			
+
+
 			TimerInit(&TxNextPacketTimer, OnTxNextPacketTimerEvent);
 
 			TimerInit(&LoraSendWaitTimer, LoraSendWaitTimerEvent);
 			TimerSetValue(&LoraSendWaitTimer, 3000);
 
-			
-//			mibReq.Type = MIB_ADR;
-//			mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
-//			LoRaMacMibSetRequestConfirm(&mibReq);
 
-//			mibReq.Type = MIB_PUBLIC_NETWORK;
-//			mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
-//			LoRaMacMibSetRequestConfirm(&mibReq);
-
-
-//      mibReq.Type = MIB_CHANNELS_DATARATE;
-//      mibReq.Param.ChannelsDatarate = LORAWAN_DEFAULT_DATARATE;
-//      LoRaMacMibSetRequestConfirm(&mibReq);
-//      
-
-//      if( LORAMAC_REGION_EU868 == region ){
-//#if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
-//          LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );
-//          LoRaMacChannelAdd( 4, ( ChannelParams_t )LC5 );
-//          LoRaMacChannelAdd( 5, ( ChannelParams_t )LC6 );
-//          LoRaMacChannelAdd( 6, ( ChannelParams_t )LC7 );
-//          LoRaMacChannelAdd( 7, ( ChannelParams_t )LC8 );
-//          LoRaMacChannelAdd( 8, ( ChannelParams_t )LC9 );
-//          LoRaMacChannelAdd( 9, ( ChannelParams_t )LC10 );
-//          
-//          mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
-//          mibReq.Param.Rx2DefaultChannel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-//          LoRaMacMibSetRequestConfirm( &mibReq );
-
-//          mibReq.Type = MIB_RX2_CHANNEL;
-//          mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-//          LoRaMacMibSetRequestConfirm( &mibReq );
-//#endif
-//      }
-
-//      if ( LORAMAC_REGION_US915 == region )
-//			{
-//  				uint16_t ch_mask[5];
-//  				ch_mask[0] = 0xff00;
-//  				ch_mask[1] = 0x0000;
-//  				ch_mask[2] = 0x0000;
-//  				ch_mask[3] = 0x0000;
-//  				ch_mask[4] = 0x0000;
-
-//  				mibReq.Type = MIB_CHANNELS_DEFAULT_MASK;
-//  				mibReq.Param.ChannelsDefaultMask = ch_mask;
-//  				LoRaMacMibSetRequestConfirm(&mibReq);
-
-//  				mibReq.Type = MIB_CHANNELS_MASK;
-//  				mibReq.Param.ChannelsDefaultMask = ch_mask;
-//  				LoRaMacMibSetRequestConfirm(&mibReq);
-//			}
-//			
-//      else if( LORAMAC_REGION_CN470 == region ){
-//          uint16_t ch_mask[6];
-//  				ch_mask[0] = 0x0000; /* 0  - 15 : 470.3 ~ 473.3 */
-//  				ch_mask[1] = 0x0000; /* 16 - 31 : 473.5 ~ 476.5 */
-//  				ch_mask[2] = 0x0000; /* 32 - 47 : 476.7 ~ 479.7 */
-//  				ch_mask[3] = 0x0000; /* 48 - 63 : 479.9 ~ 482.9 */
-//  				ch_mask[4] = 0x0000; /* 64 - 79 : 483.1 ~ 486.1 */
-//  				ch_mask[5] = 0x00ff; /* 80 - 95 : 486.3 ~ 489.3 */
-
-//  				mibReq.Type = MIB_CHANNELS_DEFAULT_MASK;
-//  				mibReq.Param.ChannelsDefaultMask = ch_mask;
-//  				LoRaMacMibSetRequestConfirm(&mibReq);
-
-//  				mibReq.Type = MIB_CHANNELS_MASK;
-//  				mibReq.Param.ChannelsDefaultMask = ch_mask;
-//  				LoRaMacMibSetRequestConfirm(&mibReq);
-
-//      }      
-
-      DeviceState  = DEVICE_STATE_JOIN;
-      break;
-    }
-    case DEVICE_STATE_JOIN:{
+			DeviceState  = DEVICE_STATE_JOIN;			
+		}
+		break;
+		case DEVICE_STATE_JOIN:
+		{
 			if( g_lora_config.join_mode[0] == 0x0A && g_lora_config.join_mode[1] == 0x55)
 			{
 				e_printf("OTAA mode: \r\n");
@@ -882,7 +833,8 @@ int LoRaWAN_loop(void) {
 				mlmeReq.Req.Join.AppEui = g_lora_config.app_eui;
 				mlmeReq.Req.Join.AppKey = g_lora_config.app_key;
 				mlmeReq.Req.Join.NbTrials = 3;				
-				if (NextTx == true) {	
+				if (NextTx == true) 
+				{	
 					e_printf("OTAA Join Start... \r\n");					
 					LoRaMacMlmeRequest(&mlmeReq);
 					LoraSendWait = true;
@@ -907,7 +859,7 @@ int LoRaWAN_loop(void) {
 				dump_hex2str(g_lora_config.apps_key , 16);
 
 				mibReq.Type = MIB_NET_ID;
-				mibReq.Param.NetID = LORAWAN_NETWORK_ID;
+				mibReq.Param.NetID = 0;
 				LoRaMacMibSetRequestConfirm( &mibReq );
 
 				mibReq.Type = MIB_DEV_ADDR;
@@ -934,133 +886,154 @@ int LoRaWAN_loop(void) {
 				APP_PORT_FLAG |= APP_PORT_ACC_FLAG;	
 				APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;
 				APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
-      		
+
 				DeviceState = DEVICE_STATE_SEND;
-			}
-			break;
+			}			
 		}
-		case DEVICE_STATE_SEND: {
-			if (NextTx == true) {
-				if( AppPort == 224 ){
-            ret = PrepareTxFrame(224, AppData, &AppDataSize);
-            app_port = 224;
+		break;
+		case DEVICE_STATE_SEND: 
+		{
+			if (NextTx == true) 
+			{
+				if( AppPort == 224 )
+				{
+					ret = PrepareTxFrame(224, AppData, &AppDataSize);
+					app_port = 224;
 				}
 				else
 				{
-          if( APP_PORT_FLAG & APP_PORT_GPS_FLAG ){			
-            if( GpsIsEnable() == false ){
-              GpsStart();
-              next_time = 2000;
-            }
+					if( APP_PORT_FLAG & APP_PORT_GPS_FLAG )
+					{			
+						if( GpsIsEnable() == false )
+						{
+							GpsStart();
+							next_time = 2000;
+						}
 
-            ret = PrepareTxFrame(APP_PORT_GPS, AppData, &AppDataSize);
-            app_port = APP_PORT_GPS;
-            if( ret == SUCCESS ){
-//              APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
-              if( GetBoardPowerSource( ) == BATTERY_POWER){
-                GpsStop();
-              }
-              gps_retry_cnt = 0;
-              next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-            }
-            else{
-              gps_retry_cnt++;
-              if( gps_retry_cnt >= g_lora_config.gps_stime){
-              /*ret = PrepareTxFrame(APP_PORT_TEMP, app_data, &app_data_size);*/
-                gps_retry_cnt = 0;
-                APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
-                if( GetBoardPowerSource( ) == BATTERY_POWER){
-                  GpsStop();
-                }
-				e_printf("FAIL.The Satellite signal not found!\r\n");				
-                next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-				DelayMs(next_time);
-				DeviceState = DEVICE_STATE_SEND;
-				break;				
-              }
-              else{
-                next_time = 1000;
-              }
-            }
-  				}
-  				else if( APP_PORT_FLAG & APP_PORT_TEMP_FLAG ){
-  					ret = PrepareTxFrame(APP_PORT_TEMP, AppData, &AppDataSize);
-  					if( ret == SUCCESS ){
-  						app_port = APP_PORT_TEMP;
-//  						APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
-  					}
-  					next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-  				}
-  				else if( APP_PORT_FLAG & APP_PORT_ACC_FLAG ){
-  					ret = PrepareTxFrame(APP_PORT_ACC, AppData, &AppDataSize);
-  					if( ret == SUCCESS ){
-  						app_port = APP_PORT_ACC;
-//  						APP_PORT_FLAG &= ~APP_PORT_ACC_FLAG;
-  					}
-  					next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-  				}
-  				else if( APP_PORT_FLAG & APP_PORT_GAS_FLAG ){
-  				    
-  				    ret = PrepareTxFrame( APP_PORT_GAS, AppData, &AppDataSize);
-  				    if( ret == SUCCESS ){
-  				        app_port = APP_PORT_GAS;
-//  				        APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;
-  				    }
-              next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-  				}    				
-				}
-                
-				if( ret == SUCCESS ){
-					ret = SendFrame(app_port);
-					NextTx = ret;
+						ret = PrepareTxFrame(APP_PORT_GPS, AppData, &AppDataSize);
+						app_port = APP_PORT_GPS;
+						if( ret == SUCCESS )
+						{
+//							APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
+							if( GetBoardPowerSource( ) == BATTERY_POWER)
+							{
+								GpsStop();
+							}
+							gps_retry_cnt = 0;
+							next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+						}
+						else
+						{
+							gps_retry_cnt++;
+							if( gps_retry_cnt >= g_lora_config.gps_stime)
+							{
+								/*ret = PrepareTxFrame(APP_PORT_TEMP, app_data, &app_data_size);*/
+								gps_retry_cnt = 0;
+								APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
+								if( GetBoardPowerSource( ) == BATTERY_POWER)
+								{
+									GpsStop();
+								}
+								e_printf("FAIL.The Satellite signal not found!\r\n");				
+								next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+								DelayMs(next_time);
+								DeviceState = DEVICE_STATE_SEND;
+								break;							
+							}
+							else
+							{
+								next_time = 1000;
+							}
+						}
+					}
+					else if( APP_PORT_FLAG & APP_PORT_TEMP_FLAG )
+					{
+						ret = PrepareTxFrame(APP_PORT_TEMP, AppData, &AppDataSize);
+						if( ret == SUCCESS )
+						{
+							app_port = APP_PORT_TEMP;
+//							APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
+						}
+						next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+					}
+					else if( APP_PORT_FLAG & APP_PORT_ACC_FLAG )
+					{
+						ret = PrepareTxFrame(APP_PORT_ACC, AppData, &AppDataSize);
+						if( ret == SUCCESS )
+						{
+							app_port = APP_PORT_ACC;
+//							APP_PORT_FLAG &= ~APP_PORT_ACC_FLAG;
+						}
+						next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+					}
+					else if( APP_PORT_FLAG & APP_PORT_GAS_FLAG )
+					{								
+						ret = PrepareTxFrame( APP_PORT_GAS, AppData, &AppDataSize);
+						if( ret == SUCCESS )
+						{
+							app_port = APP_PORT_GAS;
+//							APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;
+						}
+						next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+					}    				
 				}
 				
-			}			
-			if (ComplianceTest.Running == true) {
+				if( ret == SUCCESS )
+				{
+					ret = SendFrame(app_port);
+					NextTx = ret;
+				}				
+			}
+
+			if (ComplianceTest.Running == true) 
+			{
 				// Schedule next packet transmission
 				TxDutyCycleTime = 5000; // 5000 ms
 			} else {
 				// Schedule next packet transmission
 				TxDutyCycleTime = next_time;
 			}
-			DeviceState = DEVICE_STATE_CYCLE;
-			break;
+			DeviceState = DEVICE_STATE_CYCLE;			
 		}
-		case DEVICE_STATE_CYCLE: {	
-
+		break;
+		case DEVICE_STATE_CYCLE: 
+		{
 			// Schedule next packet transmission
-			TimerSetValue(&TxNextPacketTimer, TxDutyCycleTime);
-			TimerStart(&TxNextPacketTimer);	
-			DeviceState = DEVICE_STATE_SLEEP;				
-
-			break;
+				TimerSetValue(&TxNextPacketTimer, TxDutyCycleTime);
+				TimerStart(&TxNextPacketTimer);	
+				DeviceState = DEVICE_STATE_SLEEP;							
 		}
-		case DEVICE_STATE_SLEEP: {
-			
+		break;
+		case DEVICE_STATE_SLEEP: 
+		{			
 			// Wake up through events
-			if( GpsIsEnable() == false && LoraSendWait == false ){
+			if( GpsIsEnable() == false && LoraSendWait == false ){				
 				TimerLowPowerHandler( );
 			}			
-			break;
 		}
-		default: {
+		break;
+		default:
+		{
 			DeviceState = DEVICE_STATE_INIT;
-			break;
 		}
-		}
+		break;
+	}
 		
-		if( Lis3dhGetIntState() == true){
-        Lis3dh_IntEventClear();
-		}
+	if( Lis3dhGetIntState() == true)
+	{
+		DelayMs(100);
+		Lis3dh_IntEventClear();
+	}
 #ifdef GPS_PPS
-		if (GpsGetPpsDetectedState() == true) {
-			// Switch LED 2 ON
-			GpioWrite(&Led2, 0);
-			TimerStart(&Led2Timer);
-		}
+	if (GpsGetPpsDetectedState() == true) 
+	{
+		// Switch LED 2 ON
+		GpioWrite(&Led2, 0);
+		TimerStart(&Led2Timer);
+	}
 #endif
-		
-		return 0;
+	
+	return 0;
 }
 
 
@@ -1094,7 +1067,7 @@ void write_flash_data(uint32_t addr, void *buffer,uint16_t len)
 	HAL_FLASH_Lock();
 }
 
-static int parse_args(char* str, char* argv[])
+int parse_args(char* str, char* argv[])
 {
     int i = 0;
     char* ch = str;
@@ -1108,27 +1081,15 @@ static int parse_args(char* str, char* argv[])
 
         argv[i-1] = ch;
         		
-        while(*ch != ':' && *ch != '\0' && *ch != '\r') {
+        while(*ch != '=' && *ch != '\0' && *ch != '\r') {
                 ch++;
-        }				
-				if(i==1)   //at+run command
-				{
-					ch--;
-					if(*ch == 'n')
-					{
-						ch--;
-						if(*ch == 'u')return 2;
-						else ch++;						
-					}	
-					ch++;					
-				}
-								
+        }
         if (*ch == '\r')
             break;
 				
         if (*ch != '\0') {
             *ch = '\0';
-			//e_printf("parm: i=%d, %s \r\n", i-1, argv[i-1]);
+			//printf("parm: i=%d, %s \r\n", i-1, argv[i-1]);
             ch++;
             while(*ch == '=') {
                 ch++;
@@ -1144,13 +1105,11 @@ int chack_data(char* str)
 	char hex_num[3] = {0};
 	char *argv[2]={NULL};
 	argc = parse_args(str, argv);
-//e_printf("argv0=%s\r\n",argv[0]);
-//e_printf("argv1=%s\r\n",argv[1]);
 	if (argc == 2){		
 		char *buffer = argv[1];
 //	read_partition(PARTITION_0, (char *)&g_lora_config, sizeof(g_lora_config));
 		
-		if (0 == strcmp(argv[0],"at+set_config=dev_eui")){
+		if (0 == strcmp(argv[0],"at+dev_eui")){
 			if (strlen(buffer) == 16) {
 				for (int i = 0; i < 8; i++)
 				{
@@ -1160,7 +1119,7 @@ int chack_data(char* str)
 			} else {
 				return 1;
 			}
-		} else if (0 == strcmp(argv[0],"at+set_config=app_eui")) {
+		} else if (0 == strcmp(argv[0],"at+app_eui")) {
 			if (strlen(buffer) == 16) {
 				for (int i = 0; i < 8; i++)
 				{
@@ -1170,7 +1129,7 @@ int chack_data(char* str)
 			} else {
 				return 1;
 			}
-		} else if (0 == strcmp(argv[0],"at+set_config=app_key")) {
+		} else if (0 == strcmp(argv[0],"at+app_key")) {
 			if (strlen(buffer) == 32) {
 				for (int i = 0; i < 16; i++)
 				{
@@ -1199,7 +1158,7 @@ int chack_data(char* str)
 			}else{
 				return 1;
 			}
-		} else if (0 == strcmp(argv[0],"at+set_config=dev_addr")) {
+		} else if (0 == strcmp(argv[0],"at+dev_addr")) {
 			if (strlen(buffer) == 8) {
 				uint32_t dev_addr;
 				dev_addr = strtoul(buffer, NULL, 16);
@@ -1207,7 +1166,7 @@ int chack_data(char* str)
 			} else {
 				return 1;
 			}
-		} else if (0 == strcmp(argv[0],"at+set_config=apps_key")) {
+		} else if (0 == strcmp(argv[0],"at+apps_key")) {
 			if (strlen(buffer) == 32) {
 				for (int i = 0; i < 16; i++)
 				{
@@ -1217,7 +1176,7 @@ int chack_data(char* str)
 			} else {
 				return 1;
 			}
-		} else if (0 == strcmp(argv[0],"at+set_config=nwks_key")) {
+		} else if (0 == strcmp(argv[0],"at+nwks_key")) {
 			if (strlen(buffer) == 32) {
 				for (int i = 0; i < 16; i++)
 				{
