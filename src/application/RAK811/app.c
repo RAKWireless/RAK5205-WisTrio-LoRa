@@ -260,12 +260,12 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 		{
 			app_data[0] = 0x03;
 			app_data[1] = 0x71;
-			app_data[2] = ( acc_data.acc_x >> 8 ) && 0xFF;
-			app_data[3] = ( acc_data.acc_x ) && 0xFF;
-			app_data[4] = ( acc_data.acc_y >> 8 ) && 0xFF;
-			app_data[5] = ( acc_data.acc_y ) && 0xFF;
-			app_data[6] = ( acc_data.acc_z >> 8 ) && 0xFF;
-			app_data[7] = ( acc_data.acc_z ) && 0xFF;
+			app_data[2] = ( acc_data.acc_x >> 8 ) & 0xFF;
+			app_data[3] = ( acc_data.acc_x ) & 0xFF;
+			app_data[4] = ( acc_data.acc_y >> 8 ) & 0xFF;
+			app_data[5] = ( acc_data.acc_y ) & 0xFF;
+			app_data[6] = ( acc_data.acc_z >> 8 ) & 0xFF;
+			app_data[7] = ( acc_data.acc_z ) & 0xFF;
 			*size = 8;
 			e_printf("Tx_ACC X:%dmg Y:%dmg Z:%dmg\r\n",
 				acc_data.acc_x, acc_data.acc_y,acc_data.acc_z);

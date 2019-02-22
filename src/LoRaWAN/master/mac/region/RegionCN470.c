@@ -689,19 +689,19 @@ int8_t RegionCN470AlternateDr( AlternateDrParams_t* alternateDr )
     }
     else if( ( alternateDr->NbTrials % 24 ) == 0 )
     {
-        datarate = DR_2;
+        datarate = DR_0;
     }
     else if( ( alternateDr->NbTrials % 16 ) == 0 )
     {
-        datarate = DR_3;
+        datarate = DR_1;
     }
     else if( ( alternateDr->NbTrials % 8 ) == 0 )
     {
-        datarate = DR_4;
+        datarate = DR_0;
     }
     else
     {
-        datarate = DR_5;
+        datarate = DR_1;
     }
     return datarate;
 }

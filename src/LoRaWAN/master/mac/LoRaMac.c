@@ -2062,7 +2062,7 @@ static LoRaMacStatus_t ScheduleTx( void )
     }
 
 	
-if((JoinRequestTrials==32)&&(LoRaMacRegion==LORAMAC_REGION_CN470))dutyCycleTimeOff=0;
+//if((JoinRequestTrials==32)&&(LoRaMacRegion==LORAMAC_REGION_CN470))dutyCycleTimeOff=0;
 #if DEBUG_FW 		
 	e_printf("Channel=%d,dutyCycleTimeOff=%d.\r\n",Channel,dutyCycleTimeOff);	
 	e_printf("Datarate=%d.\r\n",LoRaMacParams.ChannelsDatarate);	

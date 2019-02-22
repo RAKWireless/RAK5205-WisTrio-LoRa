@@ -1,5 +1,7 @@
 # RAK5205-WisTrio-LoRa
 RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
+**RAK5205-WisTrio-LoRa firmware version 2.x.0.6**<br>
+Modify the acceleration sensor LIS3DH send to server data package error.<br><br>
 **RAK5205-WisTrio-LoRa firmware version 2.x.0.5**<br>
 For compatible with older instructions,modify some AT commands to old commands during the configuration.
 details of the AT commands refer to [5205-WisTrio-LoRa node V1.1](https://github.com/RAKWireless/RAK5205-WisTrio-LoRa/blob/master/doc/5205-WisTrio-LoRa%20node%20V1.1.pdf).<br><br>

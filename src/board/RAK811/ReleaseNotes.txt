@@ -1,4 +1,9 @@
 /********************************************************/
+Version 2.x.0.6:fix some bugs.
+Features
+Modify the acceleration sensor LIS3DH send to server data package error.
+
+/********************************************************/
 Version 2.x.0.5:fix some bugs.
 Features
 For compatible with older instructions,modify some AT commands to old commands during the configuration.
