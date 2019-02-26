@@ -468,7 +468,8 @@ void SysTick_Handler( void )
 
 uint8_t GetBoardPowerSource( void )
 {
-    return BATTERY_POWER;
+	if(g_power_source) return BATTERY_POWER;
+	else return USB_POWER;
 }
 
 void InstallWakeUpPin(void)
