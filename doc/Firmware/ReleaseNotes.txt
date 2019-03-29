@@ -1,4 +1,10 @@
 /********************************************************/
+Version 2.x.0.7:fix some bugs.
+Features
+Optimize the initialization data storage, and save parameters to flash once the configuration is finished to save the initialization time
+
+
+/********************************************************/
 Version 2.x.0.6:fix some bugs.
 Features
 Modify the acceleration sensor LIS3DH send to server data package error.

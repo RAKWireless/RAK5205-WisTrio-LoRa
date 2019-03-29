@@ -85,24 +85,28 @@ int main( void )
 			if(at_wait == false )
 				break;
 			if( 0 != getchar_loop()){
+//				write_partition(PARTITION_0,&g_lora_config,sizeof(g_lora_config));
+//				rw_restore_LoRaWAN_config(rw_Str2Region(g_lora_config.region),0);
 				break;
 			}
 		}
+		write_partition(PARTITION_0,&g_lora_config,sizeof(g_lora_config));
 		e_printf("Configuration OK!\r\n");
 		
-	e_printf("app_interval = %u\r\n", g_lora_config.app_interval);
-	e_printf("gps_stime = %u\r\n", g_lora_config.gps_stime);
-	e_printf("msg_confirm = %u\r\n", g_lora_config.msg_confirm);
-	e_printf("power_save = %u\r\n", g_lora_config.power_save);
-  
-  if( g_lora_config.power_save == 0){
-	    g_power_source = USB_POWER;
-	}
-	else{
-        g_power_source = BATTERY_POWER;
-	}
+		e_printf("app_interval = %u\r\n", g_lora_config.app_interval);
+		e_printf("gps_stime = %u\r\n", g_lora_config.gps_stime);
+		e_printf("msg_confirm = %u\r\n", g_lora_config.msg_confirm);
+		e_printf("power_save = %u\r\n", g_lora_config.power_save);
+	  
+		if( g_lora_config.power_save == 0)
+		{
+			g_power_source = USB_POWER;
+		}
+		else{
+			g_power_source = BATTERY_POWER;
+		}
 
-	IsTxConfirmed =  g_lora_config.msg_confirm ? true : false;
+		IsTxConfirmed =  g_lora_config.msg_confirm ? true : false;
 #endif	
 	
 #ifdef TRACKERBOARD

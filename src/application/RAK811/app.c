@@ -1238,10 +1238,11 @@ int getchar_loop(void)
 		data_i = 0;
 		ret = chack_data(g_buffer);
 		if ( ret == 0){
-			write_partition(PARTITION_0,&g_lora_config,sizeof(g_lora_config));
-			rw_restore_LoRaWAN_config(rw_Str2Region(g_lora_config.region),0);			
+//			write_partition(PARTITION_0,&g_lora_config,sizeof(g_lora_config));
+//			rw_restore_LoRaWAN_config(rw_Str2Region(g_lora_config.region),0);			
 			e_printf("OK\r\n");
 		} else if( ret == -1 ){
+			e_printf("OK\r\n");
 			return -1;
 		}else{
 			e_printf("ERROR %d\r\n",ret);

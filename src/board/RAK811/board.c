@@ -164,11 +164,11 @@ void BoardInitMcu( void )
         SCB->VTOR = FLASH_BASE | 0x3000;
 #endif
         HAL_Init();
-				SystemClockConfig();
-				RtcInit(); 
-				BoardUnusedIoInit();
+		SystemClockConfig();
+		RtcInit(); 
+		BoardUnusedIoInit();
 #ifdef TRACKERBOARD
-			  GpioInit( &Led1, LED_1, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
+		GpioInit( &Led1, LED_1, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
         GpioInit( &Led2, LED_2, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
 #endif			
         DelayMs(1000);        
