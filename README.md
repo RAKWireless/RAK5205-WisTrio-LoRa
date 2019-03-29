@@ -29,7 +29,7 @@ details of the AT commands refer to [5205-WisTrio-LoRa node V1.1](https://github
 
   Tips：  Region switch by such as"at+band=EU868"command.
   AT command refer to [RAK811 Lora AT Command V1.4.pdf](https://github.com/RAKWireless/RAK5205-WisTrio-LoRa/blob/master/doc/RAK811%C2%A0Lora%C2%A0AT%C2%A0Command%C2%A0V1.4.pdf).   <br>
-3.Method of The Demo project generates different firmware refer to [ReleaseNotes.txt](https://github.com/RAKWireless/RAK5205-WisTrio-LoRa/blob/master/src/board/RAK811/ReleaseNotes.txt).<br>
+3.Method of The Demo project generates different firmware refer to [ReleaseNotes.txt](https://github.com/RAKWireless/RAK5205-WisTrio-LoRa/blob/master/doc/Firmware/ReleaseNotes.txt).<br>
 4.the manual of RAK5205-WisTrio-LoRa refer to [RAK5205\_User\_Manual_V1.6.pdf](https://github.com/RAKWireless/RAK5205-WisTrio-LoRa/blob/master/doc/RAK5205_User_Manual_V1.6.pdf)<br>
 
 **Overview**<br>
