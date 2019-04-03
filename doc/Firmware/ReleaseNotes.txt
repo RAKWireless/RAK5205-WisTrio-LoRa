@@ -1,4 +1,11 @@
 /********************************************************/
+Version 2.x.1.8:
+Features
+1.Modify the format of the sent data to LPP for cayenne.
+2.Fit TTN and LoRaServer at region CN470 to connected quickly.
+
+
+/********************************************************/
 Version 2.x.0.7:fix some bugs.
 Features
 Optimize the initialization data storage, and save parameters to flash once the configuration is finished to save the initialization time

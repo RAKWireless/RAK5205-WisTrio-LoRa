@@ -178,14 +178,16 @@ extern bool SystemWakeupTimeCalibrated;
 static uint32_t APP_PORT_FLAG = 0;
 
 #define APP_PORT_GPS_FLAG	( 0x01 << 0 )
-#define APP_PORT_TEMP_FLAG 	( 0x01 << 1 )
+#define APP_PORT_BATT_FLAG 	( 0x01 << 1 )
 #define APP_PORT_ACC_FLAG 	( 0x01 << 2 )
 #define APP_PORT_GAS_FLAG   ( 0x01 << 3 )
+#define APP_PORT_AIR_FLAG ( 0x01 << 4 )
 
 #define APP_PORT_GPS 2
-#define APP_PORT_TEMP 3
+#define APP_PORT_BATT 3
 #define APP_PORT_ACC 4
 #define APP_PORT_GAS 5
+#define APP_PORT_AIR 6
 
 static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size ) {
 	double latitude, longitude = 0;
@@ -204,7 +206,7 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 	switch (port) 
 	{
   	//https://mydevices.com/cayenne/docs/lora/#lora-cayenne-low-power-payload
-//cayenne LPP GPS
+		//cayenne LPP GPS
 		case APP_PORT_GPS: 
 		{
 			ret = GpsGetLatestGpsPositionDouble(&latitude, &longitude);
@@ -226,13 +228,11 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 				app_data[9] = ((altitudeGps * 100) >> 8) & 0xFF;
 				app_data[10] = (altitudeGps * 100) & 0xFF;
 				
-				float speed;
-				sscanf(NmeaGpsData.NmeaSpeed,"%f", &speed );
-				speed*=1.852;  //unit:km/h
-				app_data[11] = ((uint16_t)(speed*100)>>8)& 0xFF;; //high byte speed   
-				app_data[12] = ((uint16_t)(speed*100))& 0xFF;; //low byte speed    
-				*size = 13;	
-				e_printf("latitude: %f, longitude: %f , altitudeGps: %d, speed: %f\r\n", latitude, longitude, altitudeGps,speed);
+
+				//app_data[11] = ((uint16_t)(speed*100)>>8)& 0xFF;; //high byte speed //cant send due to 11 bytes of LPP   
+				//app_data[12] = ((uint16_t)(speed*100))& 0xFF;; //low byte speed //cant send due to 11 vytes of LPP
+				*size = 11;	
+				e_printf("latitude: %f, longitude: %f , altitudeGps: %dm \r\n", latitude, longitude, altitudeGps);
 				f_ret = SUCCESS;
 			}
 			else 
@@ -242,20 +242,28 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 			}
 			break;
 		}
-//cayenne LPP Temp
-		case APP_PORT_TEMP: 
+			
+		//cayenne LPP Battery, Speed from GPS
+		case APP_PORT_BATT: 
 		{
 			app_data[0] = 0x07;
 			app_data[1] = 0x02; //Analog Output
 			bat = BoardBatteryMeasureVolage();
 			app_data[2] = ((bat / 10) >> 8) & 0xFF;
 			app_data[3] = (bat / 10) & 0xFF;
-			*size = 4;
-			e_printf("Tx_Bat: %dmv\r\n",bat);
+			float speed;
+			sscanf(NmeaGpsData.NmeaSpeed,"%f", &speed ); //get data for speed from GPS
+			speed*=1.852;  //unit:km/h
+			app_data[4] = 0x08;
+			app_data[5] = 0x02;
+			app_data[6] = ((uint16_t)(speed*100)>>8)& 0xFF;; //high byte speed   
+			app_data[7] = ((uint16_t)(speed*100))& 0xFF;; //low byte speed 
+			*size = 8;
+			e_printf("Tx_Bat: %dmv,speed: %fkm/h\r\n",bat,speed);
 			f_ret = SUCCESS;
 			break;
 		}
-//cayenne LPP Acceleration
+		//cayenne LPP Acceleration
 		case APP_PORT_ACC: 
 		{
 			app_data[0] = 0x03;
@@ -268,12 +276,12 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 			app_data[7] = ( acc_data.acc_z ) & 0xFF;
 			*size = 8;
 			e_printf("Tx_ACC X:%dmg Y:%dmg Z:%dmg\r\n",
-				acc_data.acc_x, acc_data.acc_y,acc_data.acc_z);
+			acc_data.acc_x, acc_data.acc_y,acc_data.acc_z);
 			f_ret = SUCCESS;
 			break;
 		}
   		
-		case APP_PORT_GAS : 
+		case APP_PORT_GAS: 
 		{
 			if(SUCCESS == BME680_read(&temp, &press, &humi, &resis))
 			{
@@ -281,17 +289,31 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 				app_data[1] = 0x67;
 				app_data[2] = (( temp / 10 ) >> 8 ) & 0xFF;
 				app_data[3] = (temp / 10 ) & 0xFF;
-
 				app_data[4] = 0x05;
 				app_data[5] = 0x68;
 				app_data[6] = ( humi / 500 ) & 0xFF;
-
 				app_data[7] = 0x06;
 				app_data[8] = 0x73;
 				app_data[9] = (((int32_t)( press / 10)) >> 8) & 0xFF;
 				app_data[10] = ((int32_t)(press / 10 )) & 0xFF;
-
 				*size = 11;
+				f_ret = SUCCESS;
+			}
+			else
+			{
+				f_ret = FAIL;
+			}
+			break;
+		}
+		case APP_PORT_AIR:
+		{
+			if(SUCCESS == BME680_read(&temp, &press, &humi, &resis))
+			{
+				app_data[0] = 0x09;
+				app_data[1] = 0x02; //analog output
+				app_data[2] = (((int32_t)(resis / 10)) >> 8) & 0xFF;
+				app_data[3] = ((int32_t)(resis / 10 )) & 0xFF;
+				*size = 4;
 				f_ret = SUCCESS;
 			}
 			else
@@ -405,8 +427,9 @@ static void OnTxNextPacketTimerEvent(void)
 			{
 				APP_PORT_FLAG |= APP_PORT_GPS_FLAG;
 				APP_PORT_FLAG |= APP_PORT_ACC_FLAG;			
-				APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;		
+				APP_PORT_FLAG |= APP_PORT_BATT_FLAG;		
 				APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
+				APP_PORT_FLAG |= APP_PORT_AIR_FLAG;
 				DeviceState = DEVICE_STATE_SEND;
 			}
 			else if((APP_PORT_FLAG & APP_PORT_GPS_FLAG))DeviceState = DEVICE_STATE_SEND;
@@ -477,9 +500,10 @@ static void McpsConfirm_callback(McpsConfirm_t *mcpsConfirm)
 	}
 
 	if( APP_PORT_FLAG & APP_PORT_GPS_FLAG )APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
-	else if( APP_PORT_FLAG & APP_PORT_TEMP_FLAG )APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
+	else if( APP_PORT_FLAG & APP_PORT_BATT_FLAG )APP_PORT_FLAG &= ~APP_PORT_BATT_FLAG;
 	else if( APP_PORT_FLAG & APP_PORT_ACC_FLAG )APP_PORT_FLAG &= ~APP_PORT_ACC_FLAG;
 	else if( APP_PORT_FLAG & APP_PORT_GAS_FLAG )APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;		
+	else if( APP_PORT_FLAG & APP_PORT_AIR_FLAG )APP_PORT_FLAG &= ~APP_PORT_AIR_FLAG;
 
 	if( APP_PORT_FLAG != 0 )DeviceState = DEVICE_STATE_SEND;
 	else 
@@ -739,8 +763,9 @@ static uint8_t RetryCnt=0;
 			
 			APP_PORT_FLAG |= APP_PORT_GPS_FLAG;
 			APP_PORT_FLAG |= APP_PORT_ACC_FLAG;
-			APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;
+			APP_PORT_FLAG |= APP_PORT_BATT_FLAG;
 			APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
+			APP_PORT_FLAG |= APP_PORT_AIR_FLAG;
 
 			TxDutyCycleTime = 5000;
 		} else {
@@ -884,8 +909,9 @@ int LoRaWAN_loop(void) {
 				
 				APP_PORT_FLAG |= APP_PORT_GPS_FLAG;
 				APP_PORT_FLAG |= APP_PORT_ACC_FLAG;	
-				APP_PORT_FLAG |= APP_PORT_TEMP_FLAG;
+				APP_PORT_FLAG |= APP_PORT_BATT_FLAG;
 				APP_PORT_FLAG |= APP_PORT_GAS_FLAG;
+				APP_PORT_FLAG |= APP_PORT_AIR_FLAG;
 
 				DeviceState = DEVICE_STATE_SEND;
 			}			
@@ -927,14 +953,14 @@ int LoRaWAN_loop(void) {
 							gps_retry_cnt++;
 							if( gps_retry_cnt >= g_lora_config.gps_stime)
 							{
-								/*ret = PrepareTxFrame(APP_PORT_TEMP, app_data, &app_data_size);*/
+								/*ret = PrepareTxFrame(APP_PORT_BATT, app_data, &app_data_size);*/
 								gps_retry_cnt = 0;
 								APP_PORT_FLAG &= ~APP_PORT_GPS_FLAG;
 								if( GetBoardPowerSource( ) == BATTERY_POWER)
 								{
 									GpsStop();
 								}
-								e_printf("FAIL.The Satellite signal not found!\r\n");				
+								e_printf("FAIL. GPS signal not found!\r\n");				
 								next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
 								DelayMs(next_time);
 								DeviceState = DEVICE_STATE_SEND;
@@ -946,13 +972,13 @@ int LoRaWAN_loop(void) {
 							}
 						}
 					}
-					else if( APP_PORT_FLAG & APP_PORT_TEMP_FLAG )
+					else if( APP_PORT_FLAG & APP_PORT_BATT_FLAG )
 					{
-						ret = PrepareTxFrame(APP_PORT_TEMP, AppData, &AppDataSize);
+						ret = PrepareTxFrame(APP_PORT_BATT, AppData, &AppDataSize);
 						if( ret == SUCCESS )
 						{
-							app_port = APP_PORT_TEMP;
-//							APP_PORT_FLAG &= ~APP_PORT_TEMP_FLAG;
+							app_port = APP_PORT_BATT;
+//							APP_PORT_FLAG &= ~APP_PORT_BATT_FLAG;
 						}
 						next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
 					}
@@ -975,7 +1001,17 @@ int LoRaWAN_loop(void) {
 //							APP_PORT_FLAG &= ~APP_PORT_GAS_FLAG;
 						}
 						next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-					}    				
+					}  
+					else if( APP_PORT_FLAG & APP_PORT_AIR_FLAG )
+					{
+						ret = PrepareTxFrame(APP_PORT_AIR, AppData, &AppDataSize);
+						if( ret == SUCCESS )
+						{
+							app_port = APP_PORT_AIR;
+//							APP_PORT_FLAG &= ~APP_PORT_AIR_FLAG;
+						}
+						next_time = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+					}  				
 				}
 				
 				if( ret == SUCCESS )
@@ -1242,7 +1278,6 @@ int getchar_loop(void)
 //			rw_restore_LoRaWAN_config(rw_Str2Region(g_lora_config.region),0);			
 			e_printf("OK\r\n");
 		} else if( ret == -1 ){
-			e_printf("OK\r\n");
 			return -1;
 		}else{
 			e_printf("ERROR %d\r\n",ret);

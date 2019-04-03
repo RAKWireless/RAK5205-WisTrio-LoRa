@@ -20,11 +20,10 @@
   #define CUSTOM_VER         1           //LF
 #endif
 #ifdef TRACKERBOARD
-	#define FUN_VER            0            //3:LoRaNode 4:TrackerBoard
-//#else
-//	#define FUN_VER            3           //3:LoRaNode 4:TrackerBoard
+#define FUN_VER            1         //1:Fit TTN and LoRaServer at region CN470 to connected quickly.
+                                     //0: standard LoRaWAN protocol 
 #endif
-#define BUG_VER            7         //
+#define BUG_VER            8         //
 #define TEST_VER           1  // 1 test uplink downlink
                               // 2 actility cert test
                               // 3 HSI cabrit
