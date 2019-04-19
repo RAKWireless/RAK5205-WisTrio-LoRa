@@ -1,4 +1,10 @@
 /********************************************************/
+Version 2.x.1.9:
+Features
+1.Configure the default channel for the CN470 mask for fast connections to the TTN and LoRaserver
+
+
+/********************************************************/
 Version 2.x.1.8:
 Features
 1.Modify the format of the sent data to LPP for cayenne.

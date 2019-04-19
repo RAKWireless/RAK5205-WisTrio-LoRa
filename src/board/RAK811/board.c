@@ -305,6 +305,8 @@ uint16_t BoardBatteryMeasureVolage( void )
     uint16_t vref = 0;
     uint16_t vdiv = 0;
     uint16_t batteryVoltage = 0;
+	
+	
 
     vdiv = AdcReadChannel( &Adc, BAT_LEVEL_CHANNEL );
     vref = AdcReadChannel( &Adc, ADC_CHANNEL_VREFINT );

@@ -1,6 +1,10 @@
 # RAK5205-WisTrio-LoRa
 RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
 
+**RAK5205-WisTrio-LoRa firmware version 2.x.1.9**<br>
+Configure the default channel for the CN470 mask for fast connections to the TTN and LoRaserver<br><br>
+
+
 **RAK5205-WisTrio-LoRa firmware version 2.x.1.8**<br>
 1.Modify the format of the sent data to LPP for cayenne.<br>
 2.Fit TTN and LoRaServer at region CN470 to connected quickly.<br><br>

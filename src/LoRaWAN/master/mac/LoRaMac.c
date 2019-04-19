@@ -1550,7 +1550,9 @@ static void OnRxWindow1TimerEvent( void )
 
     RegionRxConfig( LoRaMacRegion, &RxWindow1Config, ( int8_t* )&McpsIndication.RxDatarate );
     RxWindowSetup( RxWindow1Config.RxContinuous, LoRaMacParams.MaxRxWindow );
-    DPRINTF("\r\nRx1_Freq=%d, Dr_tb[%d] \r\n", RxWindow1Config.Frequency, RxWindow1Config.Datarate);
+#if DEBUG_FW 
+    e_printf("\r\nRx1_Freq=%d, Dr_tb[%d] \r\n", RxWindow1Config.Frequency, RxWindow1Config.Datarate);
+#endif
 }
 
 static void OnRxWindow2TimerEvent( void )
@@ -1576,7 +1578,9 @@ static void OnRxWindow2TimerEvent( void )
     {
         RxWindowSetup( RxWindow2Config.RxContinuous, LoRaMacParams.MaxRxWindow );
         RxSlot = RxWindow2Config.Window;
-        DPRINTF("\r\nRx2_Freq=%d, Dr_tb[%d] \r\n", RxWindow2Config.Frequency, RxWindow2Config.Datarate);
+#if DEBUG_FW 
+        e_printf("\r\nRx2_Freq=%d, Dr_tb[%d] \r\n", RxWindow2Config.Frequency, RxWindow2Config.Datarate);
+#endif
     }
     
 }

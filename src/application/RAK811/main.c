@@ -107,26 +107,26 @@ int main( void )
 #endif	
 	
 #ifdef TRACKERBOARD
-	DeviceState = DEVICE_STATE_INIT;		
-	LoRaWAN_loop();	
+		DeviceState = DEVICE_STATE_INIT;		
+		LoRaWAN_loop();	
 #else 
-	rw_InitLoRaWAN();
+		rw_InitLoRaWAN();
 #endif	
 	
-	GPIOIRQ_Enable();	
-	
-	BoardHiwdogInit();	
-	TimerStart(&HIWDG_Timer);
-	
-	e_printf("Board Initialization OK!\r\n\r\n");
+		GPIOIRQ_Enable();	
 		
-	while(1) 
-	{
+		BoardHiwdogInit();	
+		TimerStart(&HIWDG_Timer);
+		
+		e_printf("Board Initialization OK!\r\n\r\n");
+			
+		while(1) 
+		{
 
-		lora_cli_loop();				
-		BoardHIWDGRefresh();
+			lora_cli_loop();				
+			BoardHIWDGRefresh();
 #ifdef TRACKERBOARD
-		LoRaWAN_loop();	
+			LoRaWAN_loop();	
 #endif			
 	}
 }
