@@ -213,7 +213,7 @@ static uint8_t PrepareTxFrame(uint8_t port, uint8_t * app_data, uint8_t * size )
 			
 			altitudeGps = GpsGetLatestGpsAltitude(); // in m
 				
-//			gps84_To_Gcj02(latitude, longitude, &latitude, &longitude);
+			gps84_To_Gcj02(latitude, longitude, &latitude, &longitude);
 			if( ret == SUCCESS )
 			{
 				app_data[0] = 0x01;
