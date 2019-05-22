@@ -184,31 +184,36 @@ static int write_config_string(lora_config_t *config, char *in)
 
 int write_config(char *in)
 {
-    int ret;
-lora_config_t config; 
-    ret = read_partition(PARTITION_0, (char *)&config, sizeof(config));
-    if (ret < 0) {
-        return ret;
-    }
-    ret = write_config_string(&config, in);
-    if (ret < 0) {
-        return ret;
-    }
     
-    ret = write_partition(PARTITION_0, (char *)&config, sizeof(config));
+    int ret;
+    ret = read_partition(PARTITION_0, (char *)&g_lora_config, sizeof(g_lora_config));
+    if (ret < 0) {
+        return ret;
+    }
+   
+    ret = write_config_string(&g_lora_config, in);
+    if (ret < 0) {
+        return ret;
+    } 
+      
+    ret = write_partition(PARTITION_0, (char *)&g_lora_config, sizeof(g_lora_config));
+    if (ret < 0) {
+        return ret;
+    }	
+  
+	ret = read_partition(PARTITION_0, (char *)&g_lora_config, sizeof(g_lora_config));
     return ret;
 }
 
-int read_config(const char *in, char **out)
+int read_config(char *in, char **out)
 {
-    int ret;
- lora_config_t config;    
-    ret = read_partition(PARTITION_0, (char *)&config, sizeof(config));
+    int ret;  
+    ret = read_partition(PARTITION_0, (char *)&g_lora_config, sizeof(g_lora_config));
     if (ret < 0) {
         return ret;
     }
     
-    ret = read_config_string(&config, in, config_buf);
+    ret = read_config_string(&g_lora_config, in, config_buf);
 
     if (ret < 0) {
         return ret;

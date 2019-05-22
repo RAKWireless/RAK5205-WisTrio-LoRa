@@ -1,6 +1,9 @@
 # RAK5205-WisTrio-LoRa
 RAK5205-WisTrio-LoRa :GPS ,BME680,LIS3DH,LoRaWAN1.0.2,ARM Cortex-M3 STM32L1<br><br>
 
+**RAK5205-WisTrio-LoRa firmware version 2.x.0.10**<br>
+Modify default rx1 channel  for CN470<br><br>
+
 **RAK5205-WisTrio-LoRa firmware version 2.x.1.9**<br>
 Configure the default channel for the CN470 mask for fast connections to the TTN and LoRaserver<br><br>
 

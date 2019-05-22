@@ -184,11 +184,9 @@
 /*!
  * Defines the first channel for RX window 1 for CN470 band
  */
-#if FUN_VER==0
+
 #define CN470_FIRST_RX1_CHANNEL                     ( (uint32_t) 500300000 )  
-#elif FUN_VER==1
-#define CN470_FIRST_RX1_CHANNEL                     ( (uint32_t) 506700000 )  
-#endif
+
 
 /*!
  * Defines the last channel for RX window 1 for CN470 band

@@ -102,7 +102,7 @@ typedef struct{
    
 }lora_system_t;
 
-int read_config(const char *in, char **out);
+int read_config(char *in, char **out);
 
 
 #endif
